@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>90 Day Challenge</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111;
+    --border: #222;
+    --gold: #c9a84c;
+    --gold-dim: #7a6030;
+    --white: #f0ece0;
+    --muted: #555;
+    --green: #2a7a4b;
+    --green-bright: #3ddc84;
+    --red: #8b2020;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    padding: 32px 20px 60px;
+  }
+
+  header { text-align: center; margin-bottom: 40px; }
+
+  .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(52px, 12vw, 96px);
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    line-height: 0.9;
+    text-shadow: 0 0 60px rgba(201,168,76,0.2);
+  }
+
+  .subtitle {
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 10px;
+  }
+
+  .start-info {
+    font-size: 11px;
+    color: var(--gold-dim);
+    letter-spacing: 0.15em;
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .change-date-btn {
+    background: none;
+    border: 1px solid var(--gold-dim);
+    color: var(--gold-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .change-date-btn:hover { border-color: var(--gold); color: var(--gold); }
+
+  .rules {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 36px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .rule {
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    background: var(--surface);
+  }
+  .rule span { color: var(--gold); margin-right: 6px; }
+
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+  }
+
+  .stat { text-align: center; }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-size: 9px;
+    letter-spacing: 0.25em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  .grid-wrap { max-width: 900px; margin: 0 auto; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 5px;
+  }
+
+  .day-cell {
+    aspect-ratio: 1;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.15s, transform 0.1s;
+    user-select: none;
+  }
+
+  .day-cell:hover { border-color: var(--gold-dim); transform: scale(1.05); z-index: 2; }
+  .day-cell.done { background: var(--green); border-color: var(--green-bright); }
+  .day-cell.failed { background: var(--red); border-color: #cc3333; }
+  .day-cell.today { border-color: var(--gold); box-shadow: 0 0 12px rgba(201,168,76,0.3); }
+  .day-cell.future { opacity: 0.4; cursor: default; }
+  .day-cell.future:hover { transform: none; border-color: var(--border); }
+
+  .day-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(12px, 2.5vw, 18px);
+    color: var(--muted);
+    line-height: 1;
+  }
+
+  .day-cell.done .day-num, .day-cell.failed .day-num { color: rgba(255,255,255,0.9); }
+  .day-cell.today .day-num { color: var(--gold); }
+
+  .check-icon { font-size: 10px; margin-top: 2px; opacity: 0.8; }
+
+  .progress-wrap { max-width: 900px; margin: 28px auto 0; }
+
+  .progress-bar-bg {
+    height: 4px;
+    background: var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+    transition: width 0.4s ease;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+  .progress-labels .pct { color: var(--gold); }
+
+  .legend {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .legend-box { width: 12px; height: 12px; border: 1px solid; }
+  .legend-box.done { background: var(--green); border-color: var(--green-bright); }
+  .legend-box.failed { background: var(--red); border-color: #cc3333; }
+  .legend-box.today { border-color: var(--gold); }
+  .legend-box.future { background: var(--surface); border-color: var(--border); opacity: 0.4; }
+
+  /* ── CHART SECTION ── */
+  .chart-section {
+    max-width: 900px;
+    margin: 48px auto 0;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    padding: 24px;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .chart-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+  }
+
+  .chart-meta {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .chart-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .chart-input {
+    background: var(--bg);
+    border: 1px solid var(--gold-dim);
+    color: var(--white);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 6px 10px;
+    width: 110px;
+    letter-spacing: 0.05em;
+    outline: none;
+    color-scheme: dark;
+  }
+  .chart-input:focus { border-color: var(--gold); }
+
+  .chart-label {
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  canvas#perfChart {
+    width: 100% !important;
+    height: 220px !important;
+    display: block;
+  }
+
+  .chart-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+
+  .chart-tab {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .chart-tab:hover { border-color: var(--gold-dim); color: var(--gold-dim); }
+  .chart-tab.active { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.06); }
+
+  .pnl-entry-row {
+    display: grid;
+    grid-template-columns: 1fr 140px 100px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+  }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.active { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    padding: 32px;
+    width: min(400px, 90vw);
+    position: relative;
+  }
+
+  .modal-day {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: var(--gold);
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .modal-date {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    margin-top: 4px;
+  }
+
+  .modal-checklist {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .modal-check-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    padding: 8px;
+    border: 1px solid var(--border);
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .modal-check-item:hover { border-color: var(--gold-dim); }
+  .modal-check-item.checked { border-color: var(--green-bright); background: rgba(42,122,75,0.2); color: var(--green-bright); }
+
+  .modal-check-item .cb {
+    width: 14px; height: 14px;
+    border: 1px solid var(--muted);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+  .modal-check-item.checked .cb { background: var(--green-bright); border-color: var(--green-bright); color: #000; }
+
+  /* P&L inline in day modal */
+  .pnl-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .pnl-row label {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .pnl-row input {
+    background: var(--bg);
+    border: 1px solid var(--gold-dim);
+    color: var(--white);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    padding: 7px 10px;
+    width: 130px;
+    outline: none;
+    letter-spacing: 0.05em;
+    color-scheme: dark;
+  }
+  .pnl-row input:focus { border-color: var(--gold); }
+  .pnl-hint { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; }
+
+  .modal-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn {
+    flex: 1;
+    padding: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border: 1px solid;
+    transition: background 0.15s;
+  }
+  .btn-success { background: transparent; border-color: var(--green-bright); color: var(--green-bright); }
+  .btn-success:hover { background: rgba(61,220,132,0.1); }
+  .btn-fail { background: transparent; border-color: #cc3333; color: #cc3333; }
+  .btn-fail:hover { background: rgba(139,32,32,0.2); }
+  .btn-cancel { background: transparent; border-color: var(--border); color: var(--muted); flex: 0 0 auto; padding: 12px 16px; }
+  .btn-cancel:hover { border-color: var(--muted); }
+  .btn-gold { background: transparent; border-color: var(--gold); color: var(--gold); }
+  .btn-gold:hover { background: rgba(201,168,76,0.1); }
+
+  .modal-close {
+    position: absolute;
+    top: 12px; right: 16px;
+    background: none; border: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* Date Modal */
+  .date-modal {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    padding: 32px;
+    width: min(420px, 90vw);
+    position: relative;
+    text-align: center;
+  }
+
+  .date-modal-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 32px;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+
+  .date-modal-sub {
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .date-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--gold-dim);
+    color: var(--white);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    padding: 12px;
+    text-align: center;
+    letter-spacing: 0.1em;
+    outline: none;
+    margin-bottom: 16px;
+    color-scheme: dark;
+  }
+  .date-input:focus { border-color: var(--gold); }
+
+  .date-warning { font-size: 10px; color: #cc3333; letter-spacing: 0.08em; margin-bottom: 10px; min-height: 14px; }
+
+  /* Radio-style keep/clear options */
+  .date-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+    text-align: left;
+  }
+
+  .date-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .date-option:hover { border-color: var(--gold-dim); }
+  .date-option.selected { border-color: var(--gold); background: rgba(201,168,76,0.07); }
+
+  .date-option input[type=radio] { display: none; }
+
+  .date-option-dot {
+    width: 12px; height: 12px;
+    border: 1px solid var(--muted);
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .date-option.selected .date-option-dot { border-color: var(--gold); background: var(--gold); }
+
+  .date-option-text { font-size: 10px; letter-spacing: 0.08em; }
+  .date-option-title { color: var(--white); margin-bottom: 2px; }
+  .date-option-desc { color: var(--muted); font-size: 9px; letter-spacing: 0.05em; }
+
+  .date-modal-btns { display: flex; gap: 10px; }
+
+  /* Report Modal */
+  .report-modal {
+    background: var(--surface);
+    border: 1px solid var(--gold-dim);
+    padding: 32px;
+    width: min(600px, 92vw);
+    position: relative;
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .report-modal::-webkit-scrollbar { width: 4px; }
+  .report-modal::-webkit-scrollbar-track { background: var(--bg); }
+  .report-modal::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+
+  .report-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 36px;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .report-subtitle {
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  .report-body {
+    font-size: 12px;
+    line-height: 1.8;
+    color: var(--white);
+    letter-spacing: 0.03em;
+    white-space: pre-wrap;
+  }
+
+  .report-body .section-head {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    display: block;
+    margin: 18px 0 6px;
+  }
+
+  .report-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 40px 0;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+  }
+
+  .report-spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Bottom actions */
+  .bottom-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin: 32px auto 0;
+    flex-wrap: wrap;
+  }
+
+  .action-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .action-btn:hover { border-color: var(--muted); color: var(--white); }
+
+  .action-btn.report-btn {
+    border-color: var(--gold-dim);
+    color: var(--gold-dim);
+  }
+  .action-btn.report-btn:hover { border-color: var(--gold); color: var(--gold); background: rgba(201,168,76,0.05); }
+
+  .restart-btn {
+    background: none;
+    border: 1px solid #8b2020;
+    color: #cc3333;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .restart-btn:hover { border-color: #cc3333; background: rgba(139,32,32,0.15); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title">90 DAYS</div>
+  <div class="subtitle">Discipline · Focus · Execution</div>
+  <div class="start-info">
+    <span id="startInfo">— SET YOUR START DATE —</span>
+    <button class="change-date-btn" onclick="openDateModal()">✎ Change Date</button>
+  </div>
+</header>
+
+<div class="rules">
+  <div class="rule"><span>01</span>No social media</div>
+  <div class="rule"><span>02</span>One setup only</div>
+  <div class="rule"><span>03</span>One trade/day</div>
+  <div class="rule"><span>04</span>1% risk/trade</div>
+  <div class="rule"><span>05</span>Physical challenge</div>
+  <div class="rule"><span>06</span>Mental challenge</div>
+  <div class="rule"><span>07</span>Audit yourself</div>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num" id="statDone">0</div><div class="stat-label">Completed</div></div>
+  <div class="stat"><div class="stat-num" id="statStreak">0</div><div class="stat-label">Streak</div></div>
+  <div class="stat"><div class="stat-num" id="statLeft">90</div><div class="stat-label">Remaining</div></div>
+  <div class="stat"><div class="stat-num" id="statFailed">0</div><div class="stat-label">Missed</div></div>
+</div>
+
+<div class="grid-wrap">
+  <div class="grid" id="grid"></div>
+  <div class="progress-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+    </div>
+    <div class="progress-labels">
+      <span>Day 1</span>
+      <span class="pct" id="progressPct">0%</span>
+      <span>Day 90</span>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-box done"></div> Completed</div>
+    <div class="legend-item"><div class="legend-box failed"></div> Missed</div>
+    <div class="legend-item"><div class="legend-box today"></div> Today</div>
+    <div class="legend-item"><div class="legend-box future"></div> Upcoming</div>
+  </div>
+</div>
+
+<!-- ── CHART SECTION ── -->
+<div class="chart-section">
+  <div class="chart-header">
+    <div>
+      <div class="chart-title">Performance Chart</div>
+      <div class="chart-meta" id="chartMeta">Cumulative P&amp;L over your challenge</div>
+    </div>
+    <div class="chart-controls">
+      <span class="chart-label">Base Capital $</span>
+      <input class="chart-input" type="number" id="capitalInput" placeholder="10000" min="0" step="100" oninput="renderChart()" />
+    </div>
+  </div>
+  <div class="chart-tabs">
+    <button class="chart-tab active" onclick="switchTab('cumulative', this)">Cumulative P&amp;L</button>
+    <button class="chart-tab" onclick="switchTab('daily', this)">Daily P&amp;L</button>
+    <button class="chart-tab" onclick="switchTab('winrate', this)">Win Rate</button>
+    <button class="chart-tab" onclick="switchTab('completion', this)">Completion</button>
+  </div>
+  <canvas id="perfChart"></canvas>
+</div>
+
+<div class="bottom-actions">
+  <button class="action-btn report-btn" onclick="openReportModal()">★ Generate Report</button>
+  <button class="action-btn" onclick="resetChallenge()">↺ Reset Progress</button>
+  <button class="restart-btn" onclick="restartChallenge()">⚑ Start Again From Today</button>
+</div>
+
+<!-- ── DAY MODAL ── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-day" id="modalDay">Day 1</div>
+    <div class="modal-date" id="modalDate"></div>
+    <ul class="modal-checklist" id="modalChecklist"></ul>
+    <div class="pnl-row">
+      <label>P&amp;L ($)</label>
+      <input type="number" id="pnlInput" placeholder="e.g. 120 or -50" step="0.01" />
+      <span class="pnl-hint">optional</span>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-success" onclick="markDay('done')">✓ Mark Complete</button>
+      <button class="btn btn-fail" onclick="markDay('failed')">✗ Mark Missed</button>
+      <button class="btn btn-cancel" onclick="closeModal()">Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DATE MODAL ── -->
+<div class="modal-overlay" id="dateModalOverlay">
+  <div class="date-modal">
+    <button class="modal-close" onclick="closeDateModal()">✕</button>
+    <div class="date-modal-title">Set Start Date</div>
+    <div class="date-modal-sub">Day 1 of your 90-day challenge</div>
+    <input type="date" class="date-input" id="dateInput" />
+    <div class="date-warning" id="dateWarning"></div>
+
+    <div class="date-options" id="dateOptions">
+      <label class="date-option selected" id="optKeep">
+        <input type="radio" name="dateMode" value="keep" checked onchange="selectDateOption('keep')" />
+        <div class="date-option-dot"></div>
+        <div class="date-option-text">
+          <div class="date-option-title">Keep existing progress</div>
+          <div class="date-option-desc">Your done/missed days stay, remapped to the new start date</div>
+        </div>
+      </label>
+      <label class="date-option" id="optClear">
+        <input type="radio" name="dateMode" value="clear" onchange="selectDateOption('clear')" />
+        <div class="date-option-dot"></div>
+        <div class="date-option-text">
+          <div class="date-option-title">Start fresh</div>
+          <div class="date-option-desc">All progress and P&amp;L data will be cleared</div>
+        </div>
+      </label>
+    </div>
+
+    <div class="date-modal-btns">
+      <button class="btn btn-success" onclick="applyStartDate()">✓ Confirm</button>
+      <button class="btn btn-cancel" onclick="closeDateModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPORT MODAL ── -->
+<div class="modal-overlay" id="reportModalOverlay">
+  <div class="report-modal" id="reportModal">
+    <button class="modal-close" onclick="closeReportModal()">✕</button>
+    <div class="report-title">Challenge Report</div>
+    <div class="report-subtitle" id="reportSubtitle">Generating your analysis...</div>
+    <div id="reportContent">
+      <div class="report-loading">
+        <div class="report-spinner"></div>
+        <span>Analysing your data...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const RULES = [
+  "No social media / trading content",
+  "One setup only",
+  "One trade today",
+  "Risked only 1%",
+  "Physical challenge done",
+  "Mental challenge done",
+  "Audited myself"
+];
+
+const STORAGE_KEY = '90day_v2';
+let state = loadState();
+let activeDay = null;
+let modalChecks = [];
+let chartInstance = null;
+let activeTab = 'cumulative';
+let selectedDateMode = 'keep';
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch(e) {}
+  return { startDate: null, days: {}, capital: 10000 };
+}
+
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function getStartDate() {
+  if (!state.startDate) {
+    const d = new Date(); d.setHours(0,0,0,0);
+    state.startDate = d.toISOString().split('T')[0];
+    saveState();
+  }
+  return new Date(state.startDate + 'T00:00:00');
+}
+
+function getTodayDay() {
+  const start = getStartDate();
+  const today = new Date(); today.setHours(0,0,0,0);
+  return Math.floor((today - start) / 86400000) + 1;
+}
+
+function formatDate(dayNum) {
+  const start = getStartDate();
+  const d = new Date(start);
+  d.setDate(d.getDate() + dayNum - 1);
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+/* ── GRID ── */
+function buildGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const todayDay = getTodayDay();
+
+  for (let i = 1; i <= 90; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell';
+    cell.dataset.day = i;
+    const dayData = state.days[i];
+    const status = dayData ? dayData.status : null;
+    if (status === 'done') cell.classList.add('done');
+    else if (status === 'failed') cell.classList.add('failed');
+    if (i === todayDay) cell.classList.add('today');
+    if (i > todayDay) cell.classList.add('future');
+    cell.innerHTML = `<div class="day-num">${i}</div><div class="check-icon">${status === 'done' ? '✓' : status === 'failed' ? '✗' : i === todayDay ? '◉' : ''}</div>`;
+    if (i <= todayDay) cell.addEventListener('click', () => openModal(i));
+    grid.appendChild(cell);
+  }
+
+  updateStats();
+  updateStartInfo();
+  renderChart();
+}
+
+function updateStartInfo() {
+  const start = getStartDate();
+  const todayDay = getTodayDay();
+  const end = new Date(start); end.setDate(end.getDate() + 89);
+  const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  document.getElementById('startInfo').textContent = `${fmt(start)} → ${fmt(end)}  ·  Day ${Math.min(Math.max(todayDay,1),90)} of 90`;
+}
+
+function updateStats() {
+  const todayDay = getTodayDay();
+  let done = 0, failed = 0, streak = 0;
+  for (let i = 1; i <= 90; i++) {
+    const s = state.days[i]?.status;
+    if (s === 'done') done++;
+    if (s === 'failed') failed++;
+  }
+  for (let i = Math.min(todayDay, 90); i >= 1; i--) {
+    if (state.days[i]?.status === 'done') streak++;
+    else break;
+  }
+  const pct = Math.round((done / 90) * 100);
+  document.getElementById('statDone').textContent = done;
+  document.getElementById('statStreak').textContent = streak;
+  document.getElementById('statLeft').textContent = Math.max(0, 90 - done - failed);
+  document.getElementById('statFailed').textContent = failed;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+}
+
+/* ── DAY MODAL ── */
+function openModal(dayNum) {
+  activeDay = dayNum;
+  const dayData = state.days[dayNum];
+  modalChecks = dayData?.checks ? [...dayData.checks] : Array(RULES.length).fill(false);
+
+  document.getElementById('modalDay').textContent = `Day ${dayNum}`;
+  document.getElementById('modalDate').textContent = formatDate(dayNum);
+  document.getElementById('pnlInput').value = dayData?.pnl !== undefined ? dayData.pnl : '';
+
+  const list = document.getElementById('modalChecklist');
+  list.innerHTML = '';
+  RULES.forEach((rule, i) => {
+    const li = document.createElement('li');
+    li.className = 'modal-check-item' + (modalChecks[i] ? ' checked' : '');
+    li.innerHTML = `<div class="cb">${modalChecks[i] ? '✓' : ''}</div><span>${rule}</span>`;
+    li.addEventListener('click', () => toggleCheck(i, li));
+    list.appendChild(li);
+  });
+
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function toggleCheck(idx, el) {
+  modalChecks[idx] = !modalChecks[idx];
+  el.classList.toggle('checked', modalChecks[idx]);
+  el.querySelector('.cb').textContent = modalChecks[idx] ? '✓' : '';
+}
+
+function markDay(status) {
+  if (!activeDay) return;
+  const pnlVal = document.getElementById('pnlInput').value;
+  const pnl = pnlVal !== '' ? parseFloat(pnlVal) : undefined;
+  state.days[activeDay] = { status, checks: [...modalChecks], ...(pnl !== undefined ? { pnl } : {}) };
+  saveState();
+  closeModal();
+  buildGrid();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  activeDay = null;
+}
+
+/* ── DATE MODAL ── */
+function selectDateOption(mode) {
+  selectedDateMode = mode;
+  document.getElementById('optKeep').classList.toggle('selected', mode === 'keep');
+  document.getElementById('optClear').classList.toggle('selected', mode === 'clear');
+}
+
+function openDateModal() {
+  const current = state.startDate || new Date().toISOString().split('T')[0];
+  document.getElementById('dateInput').value = current;
+  document.getElementById('dateWarning').textContent = '';
+  selectedDateMode = 'keep';
+  selectDateOption('keep');
+  document.getElementById('dateModalOverlay').classList.add('active');
+}
+
+function closeDateModal() {
+  document.getElementById('dateModalOverlay').classList.remove('active');
+}
+
+function applyStartDate() {
+  const val = document.getElementById('dateInput').value;
+  if (!val) { document.getElementById('dateWarning').textContent = 'Please select a date.'; return; }
+  const chosen = new Date(val + 'T00:00:00');
+  const today = new Date(); today.setHours(0,0,0,0);
+  if (chosen > today) { document.getElementById('dateWarning').textContent = 'Start date cannot be in the future.'; return; }
+
+  if (selectedDateMode === 'clear') {
+    state = { startDate: val, days: {}, capital: state.capital };
+  } else {
+    state.startDate = val;
+  }
+  saveState();
+  closeDateModal();
+  buildGrid();
+}
+
+/* ── CHART ── */
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderChart();
+}
+
+function getCapital() {
+  const v = document.getElementById('capitalInput').value;
+  return v ? parseFloat(v) : (state.capital || 10000);
+}
+
+function renderChart() {
+  const todayDay = getTodayDay();
+  const capital = getCapital();
+  const days = Math.min(todayDay, 90);
+
+  const labels = [];
+  const cumPnL = [];
+  const dailyPnL = [];
+  const winRate = [];
+  const completion = [];
+
+  let running = 0, wins = 0, total = 0;
+
+  for (let i = 1; i <= days; i++) {
+    const d = state.days[i];
+    const status = d?.status;
+    const pnl = d?.pnl !== undefined ? d.pnl : 0;
+
+    if (status === 'done' || status === 'failed') {
+      total++;
+      if (status === 'done') wins++;
+    }
+
+    running += pnl;
+    labels.push(`D${i}`);
+    cumPnL.push(parseFloat(running.toFixed(2)));
+    dailyPnL.push(pnl);
+    winRate.push(total > 0 ? parseFloat(((wins / total) * 100).toFixed(1)) : null);
+    completion.push(status === 'done' ? 1 : status === 'failed' ? -1 : 0);
+  }
+
+  let meta = '';
+  if (activeTab === 'cumulative') meta = `Total: ${running >= 0 ? '+' : ''}$${running.toFixed(2)}`;
+  else if (activeTab === 'winrate') meta = `Latest: ${winRate[winRate.length-1] ?? '-'}%`;
+  else if (activeTab === 'completion') meta = `${wins} complete · ${total - wins} missed`;
+  document.getElementById('chartMeta').textContent = meta;
+
+  const ctx = document.getElementById('perfChart').getContext('2d');
+  if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+
+  const gold = '#c9a84c', goldDim = 'rgba(201,168,76,0.12)', green = '#3ddc84', red = '#cc3333';
+
+  let datasets = [];
+  let chartType = 'line';
+
+  if (activeTab === 'cumulative') {
+    datasets = [{
+      label: 'Cumulative P&L ($)',
+      data: cumPnL,
+      borderColor: gold,
+      backgroundColor: goldDim,
+      borderWidth: 2,
+      pointRadius: 3,
+      pointBackgroundColor: gold,
+      fill: true,
+      tension: 0.3
+    }];
+  } else if (activeTab === 'daily') {
+    datasets = [{
+      label: 'Daily P&L ($)',
+      data: dailyPnL,
+      backgroundColor: dailyPnL.map(v => v >= 0 ? 'rgba(61,220,132,0.7)' : 'rgba(204,51,51,0.7)'),
+      borderColor: dailyPnL.map(v => v >= 0 ? green : red),
+      borderWidth: 1,
+    }];
+    chartType = 'bar';
+  } else if (activeTab === 'winrate') {
+    datasets = [{
+      label: 'Win Rate (%)',
+      data: winRate,
+      borderColor: green,
+      backgroundColor: 'rgba(61,220,132,0.08)',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointBackgroundColor: green,
+      fill: true,
+      tension: 0.3,
+      spanGaps: true
+    }];
+  } else if (activeTab === 'completion') {
+    datasets = [{
+      label: 'Completion (1=done, -1=missed)',
+      data: completion.map(v => v === 0 ? null : v),
+      backgroundColor: completion.map(v => v === 1 ? 'rgba(61,220,132,0.7)' : 'rgba(204,51,51,0.7)'),
+      borderColor: completion.map(v => v === 1 ? green : red),
+      borderWidth: 1,
+    }];
+    chartType = 'bar';
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: chartType,
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#111',
+          borderColor: '#c9a84c',
+          borderWidth: 1,
+          titleColor: '#c9a84c',
+          bodyColor: '#f0ece0',
+          titleFont: { family: 'IBM Plex Mono', size: 11 },
+          bodyFont: { family: 'IBM Plex Mono', size: 11 },
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            color: '#555',
+            font: { family: 'IBM Plex Mono', size: 9 },
+            maxTicksLimit: 18,
+          },
+          grid: { color: '#1a1a1a' },
+          border: { color: '#222' }
+        },
+        y: {
+          ticks: {
+            color: '#555',
+            font: { family: 'IBM Plex Mono', size: 9 },
+            callback: v => activeTab === 'winrate' ? v + '%' :
+                          activeTab === 'completion' ? (v === 1 ? 'Done' : v === -1 ? 'Missed' : '') :
+                          '$' + v
+          },
+          grid: { color: '#1a1a1a' },
+          border: { color: '#222' }
+        }
+      }
+    }
+  });
+}
+
+/* ── REPORT MODAL ── */
+async function openReportModal() {
+  document.getElementById('reportModalOverlay').classList.add('active');
+  document.getElementById('reportContent').innerHTML = `<div class="report-loading"><div class="report-spinner"></div><span>Analysing your data...</span></div>`;
+  document.getElementById('reportSubtitle').textContent = 'Generating your analysis...';
+
+  const todayDay = getTodayDay();
+  const logsFilledDays = Object.keys(state.days).length;
+  if (logsFilledDays === 0) {
+    document.getElementById('reportSubtitle').textContent = 'No data yet';
+    document.getElementById('reportContent').innerHTML = `<div class="report-body">You haven't logged any days yet.\nStart marking your days as complete or missed — come back for a report once you have some data!</div>`;
+    return;
+  }
+
+  // Build summary for the AI
+  let done = 0, failed = 0, totalPnl = 0, pnlDays = 0;
+  const dayLogs = [];
+  for (let i = 1; i <= 90; i++) {
+    const d = state.days[i];
+    if (!d) continue;
+    if (d.status === 'done') done++;
+    if (d.status === 'failed') failed++;
+    if (d.pnl !== undefined) { totalPnl += d.pnl; pnlDays++; }
+    const checks = RULES.map((r, idx) => `${d.checks?.[idx] ? '✓' : '✗'} ${r}`).join(', ');
+    dayLogs.push(`Day ${i} [${d.status}] PnL: ${d.pnl !== undefined ? '$'+d.pnl : 'N/A'} | ${checks}`);
+  }
+
+  let streak = 0;
+  for (let i = Math.min(todayDay, 90); i >= 1; i--) {
+    if (state.days[i]?.status === 'done') streak++; else break;
+  }
+
+  const capital = state.capital || 10000;
+  const pnlPct = capital > 0 ? ((totalPnl / capital) * 100).toFixed(2) : 'N/A';
+
+  const summary = `
+90-Day Trading Challenge Progress Report
+=========================================
+Days elapsed: ${Math.min(todayDay, 90)} of 90
+Days logged: ${logsFilledDays}
+Completed: ${done} | Missed: ${failed} | Streak: ${streak}
+Total P&L: $${totalPnl.toFixed(2)} (${pnlPct}% of $${capital} capital)
+Days with P&L data: ${pnlDays}
+
+Day-by-day log:
+${dayLogs.join('\n')}
+
+Challenge Rules (checked per day):
+${RULES.map((r,i) => `${i+1}. ${r}`).join('\n')}
+  `.trim();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `You are a sharp, direct trading coach and performance analyst. You analyse a trader's 90-day challenge data and give honest, actionable feedback. 
+Use this exact structure with these section headers (wrap each in <section>HEADING</section> tags):
+<section>OVERVIEW</section>
+<section>STRENGTHS</section>
+<section>WEAKNESSES</section>
+<section>P&L ANALYSIS</section>
+<section>RULE COMPLIANCE</section>
+<section>RECOMMENDATIONS</section>
+Be concise, specific, data-driven. No fluff. Use numbers from the data. Max 400 words total.`,
+        messages: [{ role: 'user', content: `Analyse my 90-day challenge data and give me a performance report:\n\n${summary}` }]
+      })
+    });
+
+    const data = await res.json();
+    const text = data.content?.map(b => b.text || '').join('') || 'No response received.';
+
+    // Render with section headers styled
+    const styled = text.replace(/<section>(.*?)<\/section>/g, '<span class="section-head">$1</span>');
+    document.getElementById('reportSubtitle').textContent = `Day ${Math.min(todayDay,90)} of 90 · ${done} complete · ${failed} missed`;
+    document.getElementById('reportContent').innerHTML = `<div class="report-body">${styled}</div>`;
+  } catch(e) {
+    document.getElementById('reportContent').innerHTML = `<div class="report-body" style="color:#cc3333">Error generating report. Please try again.\n\n${e.message}</div>`;
+  }
+}
+
+function closeReportModal() {
+  document.getElementById('reportModalOverlay').classList.remove('active');
+}
+
+/* ── RESET / RESTART ── */
+function restartChallenge() {
+  if (confirm('Start again from today? All progress will be cleared.')) {
+    const today = new Date(); today.setHours(0,0,0,0);
+    state = { startDate: today.toISOString().split('T')[0], days: {}, capital: state.capital };
+    saveState();
+    buildGrid();
+  }
+}
+
+function resetChallenge() {
+  if (confirm('Reset entire 90-day challenge? This cannot be undone.')) {
+    state = { startDate: null, days: {}, capital: state.capital };
+    saveState();
+    buildGrid();
+  }
+}
+
+// Init capital input
+document.getElementById('capitalInput').value = state.capital || 10000;
+document.getElementById('capitalInput').addEventListener('change', () => {
+  state.capital = parseFloat(document.getElementById('capitalInput').value) || 10000;
+  saveState();
+});
+
+buildGrid();
+</script>
+</body>
+</html>
